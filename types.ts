@@ -1,13 +1,15 @@
 
-export type Tab = 'home' | 'planner' | 'insights' | 'me';
+
+export type Tab = 'home' | 'planner' | 'insights' | 'me' | 'log_meal';
 
 export interface UserProfile {
   age: number;
   weight: number;
   height: number;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female';
   activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-  goal: 'lose_weight' | 'maintain_weight' | 'gain_muscle';
+  goal: 'lose_weight' | 'maintain_weight' | 'gain_muscle' | 'gain_strength';
+  dietaryPreference: 'omnivore' | 'vegetarian' | 'vegan' | 'keto' | 'pescetarian';
 }
 
 export interface Exercise {
@@ -49,4 +51,27 @@ export interface DailyMealPlan {
 export interface FitnessPlan {
   workoutPlan: DailyWorkout[];
   mealPlan: DailyMealPlan[];
+}
+
+// FIX: Added the missing 'Song' interface for MusicScreen.tsx
+export interface Song {
+    title: string;
+    artist: string;
+}
+
+export interface LoggedMeal {
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+}
+
+export interface DailyLog {
+    calories: number;
+    protein: number;
+    steps: number;
+    weight: number;
+    sleep: string;
+    meals: LoggedMeal[];
 }

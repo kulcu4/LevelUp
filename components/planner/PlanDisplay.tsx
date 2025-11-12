@@ -12,7 +12,7 @@ const PlanDisplay: React.FC<{ plan: FitnessPlan }> = ({ plan }) => {
                 <button
                     key={index}
                     onClick={() => onSelect(index)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
+                    className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-all duration-300 active:scale-95 hover:-translate-y-1 ${
                         currentDay === index
                             ? 'bg-primary text-white shadow-md'
                             : 'bg-base-300 text-gray-300 hover:bg-base-300/70'
@@ -80,8 +80,8 @@ const PlanDisplay: React.FC<{ plan: FitnessPlan }> = ({ plan }) => {
     <div className="animate-fadeIn space-y-6">
         <Card>
              <div className="p-4 flex border-b border-base-300">
-                <button onClick={() => setActiveTab('workout')} className={`flex-1 py-2 text-center font-bold transition-colors ${activeTab === 'workout' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Workout Plan</button>
-                <button onClick={() => setActiveTab('meal')} className={`flex-1 py-2 text-center font-bold transition-colors ${activeTab === 'meal' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Meal Plan</button>
+                <button onClick={() => setActiveTab('workout')} className={`flex-1 py-2 text-center font-bold transition-all duration-300 active:scale-95 rounded-t-lg hover:bg-base-300/20 hover:-translate-y-1 ${activeTab === 'workout' ? 'text-primary border-b-2 border-primary bg-base-300/10' : 'text-gray-400'}`}>Workout Plan</button>
+                <button onClick={() => setActiveTab('meal')} className={`flex-1 py-2 text-center font-bold transition-all duration-300 active:scale-95 rounded-t-lg hover:bg-base-300/20 hover:-translate-y-1 ${activeTab === 'meal' ? 'text-primary border-b-2 border-primary bg-base-300/10' : 'text-gray-400'}`}>Meal Plan</button>
             </div>
             <div className="p-4 sm:p-6">
                 {activeTab === 'workout' && (

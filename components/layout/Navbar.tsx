@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HomeIcon, BoltIcon, ChartBarIcon, UserCircleIcon } from '../ui/Icons';
 import { Tab } from '../../types';
@@ -20,7 +19,7 @@ const NavItem: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-full transition-all duration-300 ${isActive ? activeClasses : inactiveClasses}`}
+      className={`flex flex-col items-center justify-center w-full transition-all duration-300 active:scale-90 hover:-translate-y-1 ${isActive ? activeClasses : inactiveClasses}`}
     >
       {icon}
       <span className="text-xs mt-1">{label}</span>

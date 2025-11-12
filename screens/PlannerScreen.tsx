@@ -1,12 +1,11 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { UserProfile, FitnessPlan } from '../types';
 import { generateFitnessPlan } from '../services/geminiService';
-import PlannerForm from '../components/planner/PlannerForm';
 import PlanDisplay from '../components/planner/PlanDisplay';
 import Spinner from '../components/ui/Spinner';
 import Card from '../components/ui/Card';
+import PlannerForm from '../components/planner/PlannerForm';
 
 const PlannerScreen: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -16,7 +15,10 @@ const PlannerScreen: React.FC = () => {
     gender: 'male',
     activityLevel: 'moderate',
     goal: 'gain_muscle',
+    dietaryPreference: 'omnivore',
   });
+  
+  const [currentStep, setCurrentStep] = useState(1);
   const [plan, setPlan] = useState<FitnessPlan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +26,24 @@ const PlannerScreen: React.FC = () => {
   const handleProfileChange = useCallback((field: keyof UserProfile, value: string | number) => {
     setUserProfile(prev => ({ ...prev, [field]: value }));
   }, []);
+  
+  const maintenanceCalories = useMemo(() => {
+    // Harris-Benedict Equation for BMR
+    const bmr = userProfile.gender === 'male'
+      ? 88.362 + (13.397 * userProfile.weight) + (4.799 * userProfile.height) - (5.677 * userProfile.age)
+      : 447.593 + (9.247 * userProfile.weight) + (3.098 * userProfile.height) - (4.330 * userProfile.age);
+
+    const activityMultipliers = {
+      sedentary: 1.2,
+      light: 1.375,
+      moderate: 1.55,
+      active: 1.725,
+      very_active: 1.9,
+    };
+    
+    return Math.round(bmr * activityMultipliers[userProfile.activityLevel]);
+  }, [userProfile]);
+
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -34,7 +54,7 @@ const PlannerScreen: React.FC = () => {
         throw new Error("API_KEY environment variable not set.");
       }
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const generatedPlan = await generateFitnessPlan(ai, userProfile);
+      const generatedPlan = await generateFitnessPlan(ai, userProfile, maintenanceCalories);
       setPlan(generatedPlan);
     } catch (err) {
       console.error(err);
@@ -43,22 +63,21 @@ const PlannerScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
+  const resetPlan = () => {
+    setPlan(null);
+    setError(null);
+    setCurrentStep(1);
+  }
 
   return (
     <div className="p-4 sm:p-6 space-y-6 animate-fadeIn">
       <header>
         <h1 className="text-3xl font-bold text-white">AI Plan Generator</h1>
-        <p className="text-gray-400">Fill in your details to get a personalized workout and meal plan.</p>
+        <p className="text-gray-400">
+            {plan ? "Your personalized plan is ready!" : "Let's create a plan tailored just for you."}
+        </p>
       </header>
-
-      {!plan && !isLoading && (
-        <PlannerForm
-          profile={userProfile}
-          onProfileChange={handleProfileChange}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
-      )}
       
       {isLoading && (
         <div className="flex flex-col items-center justify-center h-64">
@@ -72,10 +91,21 @@ const PlannerScreen: React.FC = () => {
         <Card className="bg-red-900/50 border border-red-500 p-4">
           <h3 className="font-bold text-red-400">Generation Failed</h3>
           <p className="text-red-300">{error}</p>
-          <button onClick={handleSubmit} className="mt-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition-all">
+          <button onClick={handleSubmit} className="mt-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 active:scale-95 hover:-translate-y-1">
             Try Again
           </button>
         </Card>
+      )}
+
+      {!plan && !isLoading && !error && (
+        <PlannerForm 
+            profile={userProfile}
+            onProfileChange={handleProfileChange}
+            onSubmit={handleSubmit}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            maintenanceCalories={maintenanceCalories}
+        />
       )}
 
       {plan && (
@@ -83,8 +113,8 @@ const PlannerScreen: React.FC = () => {
             <PlanDisplay plan={plan} />
              <div className="text-center mt-6">
                  <button 
-                     onClick={() => setPlan(null)} 
-                     className="bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-primary text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105"
+                     onClick={resetPlan} 
+                     className="bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-primary text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform duration-300 transform hover:scale-105 hover:-translate-y-1 active:scale-100"
                  >
                      Generate a New Plan
                  </button>
