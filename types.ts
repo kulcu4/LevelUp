@@ -1,6 +1,6 @@
 
 
-export type Tab = 'home' | 'planner' | 'insights' | 'me' | 'log_meal';
+export type Tab = 'home' | 'planner' | 'insights' | 'me' | 'log_meal' | 'music';
 
 export interface UserProfile {
   age: number;
@@ -53,10 +53,10 @@ export interface FitnessPlan {
   mealPlan: DailyMealPlan[];
 }
 
-// FIX: Added the missing 'Song' interface for MusicScreen.tsx
 export interface Song {
     title: string;
     artist: string;
+    duration?: string;
 }
 
 export interface LoggedMeal {
@@ -74,4 +74,9 @@ export interface DailyLog {
     weight: number;
     sleep: string;
     meals: LoggedMeal[];
+    caloriesGoal?: number;
+    proteinGoal?: number;
+    maintenanceCalories?: number;
+    caloriesBurned: number;
+    workoutsCompleted: string[];
 }

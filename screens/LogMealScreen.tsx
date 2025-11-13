@@ -100,6 +100,22 @@ const LogMealScreen: React.FC<LogMealScreenProps> = ({ onLogMeal }) => {
             </div>
         </Card>
       )}
+
+      <div className="text-center text-gray-500 my-2">OR</div>
+
+        <Card>
+            <div className="p-6 text-center">
+                <h2 className="text-xl font-bold text-white">Log with a Photo</h2>
+                <p className="text-gray-400 my-2">Upload or scan an image of your meal and let AI do the work.</p>
+                <button
+                    disabled // Feature coming soon
+                    className="mt-2 bg-teal-400/50 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Upload Image (Coming Soon)
+                </button>
+            </div>
+        </Card>
+
     </div>
   );
 };

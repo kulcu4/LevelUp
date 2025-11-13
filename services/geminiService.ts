@@ -1,28 +1,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, FitnessPlan, DailyLog } from '../types';
 
-const planSchema = {
+const initialPlanSchema = {
   type: Type.OBJECT,
   properties: {
     workoutPlan: {
       type: Type.ARRAY,
-      description: "A 7-day workout plan.",
+      description: "Workout plan for the first day.",
       items: {
         type: Type.OBJECT,
         properties: {
           day: { type: Type.STRING, description: "Day of the week (e.g., Monday)." },
-          focus: { type: Type.STRING, description: "Main muscle group or activity for the day (e.g., Upper Body Strength, Cardio)." },
+          focus: { type: Type.STRING, description: "Main muscle group or activity." },
           exercises: {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                sets: { type: Type.STRING, description: "e.g., 3-4" },
-                reps: { type: Type.STRING, description: "e.g., 8-12" },
-                rest: { type: Type.STRING, description: "e.g., 60s" },
-                tips: { type: Type.STRING, description: "A brief tip for performing the exercise." }
-              },
+              properties: { name: { type: Type.STRING }, sets: { type: Type.STRING }, reps: { type: Type.STRING }, rest: { type: Type.STRING }, tips: { type: Type.STRING } },
               required: ["name", "sets", "reps", "rest", "tips"]
             }
           }
@@ -32,7 +26,7 @@ const planSchema = {
     },
     mealPlan: {
       type: Type.ARRAY,
-      description: "A 7-day meal plan.",
+      description: "Meal plan for the first day.",
       items: {
         type: Type.OBJECT,
         properties: {
@@ -42,30 +36,15 @@ const planSchema = {
             items: {
               type: Type.OBJECT,
               properties: {
-                name: { type: Type.STRING, description: "e.g., Breakfast, Lunch, Dinner, Snack" },
-                description: { type: Type.STRING, description: "Example food items for the meal." },
-                calories: { type: Type.STRING },
-                macros: {
-                  type: Type.OBJECT,
-                  properties: {
-                    protein: { type: Type.STRING },
-                    carbs: { type: Type.STRING },
-                    fat: { type: Type.STRING }
-                  },
-                  required: ["protein", "carbs", "fat"]
-                }
+                name: { type: Type.STRING }, description: { type: Type.STRING }, calories: { type: Type.STRING },
+                macros: { type: Type.OBJECT, properties: { protein: { type: Type.STRING }, carbs: { type: Type.STRING }, fat: { type: Type.STRING } }, required: ["protein", "carbs", "fat"] }
               },
               required: ["name", "description", "calories", "macros"]
             }
           },
           dailyTotals: {
             type: Type.OBJECT,
-            properties: {
-              calories: { type: Type.STRING },
-              protein: { type: Type.STRING },
-              carbs: { type: Type.STRING },
-              fat: { type: Type.STRING }
-            },
+            properties: { calories: { type: Type.STRING }, protein: { type: Type.STRING }, carbs: { type: Type.STRING }, fat: { type: Type.STRING } },
             required: ["calories", "protein", "carbs", "fat"]
           }
         },
@@ -76,11 +55,24 @@ const planSchema = {
   required: ["workoutPlan", "mealPlan"]
 };
 
-export const generateFitnessPlan = async (ai: GoogleGenAI, profile: UserProfile, maintenanceCalories: number): Promise<FitnessPlan> => {
-  const prompt = `
-    Create a comprehensive, personalized 7-day fitness and diet plan for the following user.
-    The plan should be detailed, realistic, and tailored to their specific profile and goals.
+const remainingPlanSchema = {
+    type: Type.OBJECT,
+    properties: {
+      workoutPlan: {
+        type: Type.ARRAY,
+        description: "Workout plan for the remaining 6 days of the week.",
+        items: initialPlanSchema.properties.workoutPlan.items
+      },
+      mealPlan: {
+        type: Type.ARRAY,
+        description: "Meal plan for the remaining 6 days of the week.",
+        items: initialPlanSchema.properties.mealPlan.items
+      }
+    },
+    required: ["workoutPlan", "mealPlan"]
+};
 
+const commonPromptDetails = (profile: UserProfile, maintenanceCalories: number) => `
     User Profile:
     - Age: ${profile.age}
     - Weight: ${profile.weight} kg
@@ -91,16 +83,22 @@ export const generateFitnessPlan = async (ai: GoogleGenAI, profile: UserProfile,
     - Dietary Preference: ${profile.dietaryPreference}
     - Estimated Daily Maintenance Calories: ${maintenanceCalories} kcal
 
-    Instructions:
-    1.  **Workout Plan:** Create a balanced 7-day workout schedule. Include a mix of strength training, cardio, and rest days, appropriate for their stated goal. For each exercise, provide the name, number of sets, repetition range, rest time, and a brief, helpful tip.
-    2.  **Meal Plan:** Based on their goal and maintenance calories, create a 7-day meal plan with 3 main meals and 1-2 snacks per day. 
-        - If the goal is 'lose_weight', target a 300-500 kcal deficit.
-        - If the goal is 'gain_muscle', target a 300-500 kcal surplus with high protein.
-        - If the goal is 'maintain_weight' or 'gain_strength', stick close to the maintenance calories.
-        - The entire meal plan MUST adhere to their dietary preference (${profile.dietaryPreference}). 
-        - For each meal, provide a description, approximate calories, and macronutrient breakdown (protein, carbs, fat). 
-        - Calculate and provide the total daily calories and macros for each day.
-    3.  **Tone:** The tone should be encouraging, motivational, and easy to understand.
+    Instructions for Calorie Targets:
+    - If goal is 'lose_weight', target a 300-500 kcal deficit from maintenance.
+    - If goal is 'gain_muscle', target a 300-500 kcal surplus with high protein.
+    - If goal is 'maintain_weight' or 'gain_strength', stick close to the maintenance calories.
+    - The entire meal plan MUST adhere to their dietary preference (${profile.dietaryPreference}).
+
+    For each exercise, provide: name, sets, reps, rest time, and a helpful tip.
+    For each meal, provide: name, description, calories, and macros (protein, carbs, fat). Also include daily totals.
+    The tone should be encouraging, motivational, and easy to understand.
+`;
+
+export const generateInitialPlan = async (ai: GoogleGenAI, profile: UserProfile, maintenanceCalories: number): Promise<FitnessPlan> => {
+  const prompt = `
+    Create just the first day (e.g., Monday) of a personalized 7-day fitness and diet plan for the following user.
+    This first day should be a complete plan for that single day.
+    ${commonPromptDetails(profile, maintenanceCalories)}
   `;
 
   try {
@@ -109,25 +107,46 @@ export const generateFitnessPlan = async (ai: GoogleGenAI, profile: UserProfile,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseSchema: planSchema,
+        responseSchema: initialPlanSchema,
         temperature: 0.7,
       }
     });
-
     const jsonText = response.text.trim();
-    const plan = JSON.parse(jsonText);
-    
-    if (!plan.workoutPlan || !plan.mealPlan) {
-        throw new Error("Invalid plan structure received from API.");
-    }
-
-    return plan as FitnessPlan;
+    return JSON.parse(jsonText) as FitnessPlan;
   } catch (error) {
-    console.error("Error generating fitness plan:", error);
-    throw new Error("Failed to generate plan. The AI model may be temporarily unavailable or the request was invalid.");
+    console.error("Error generating initial plan:", error);
+    throw new Error("Failed to generate the initial plan.");
   }
 };
 
+
+export const generateRemainingPlan = async (ai: GoogleGenAI, profile: UserProfile, maintenanceCalories: number, initialPlan: FitnessPlan): Promise<FitnessPlan> => {
+  const prompt = `
+    You have already created Day 1 of a fitness and meal plan for a user. Here is the data for Day 1:
+    ${JSON.stringify(initialPlan, null, 2)}
+    
+    Now, create the remaining 6 days of the workout and meal plan (e.g., Tuesday through Sunday) to complete the 7-day schedule.
+    Ensure the new days are consistent with the user's goals and follow the same structure and tone as Day 1.
+    ${commonPromptDetails(profile, maintenanceCalories)}
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: remainingPlanSchema,
+        temperature: 0.7,
+      }
+    });
+    const jsonText = response.text.trim();
+    return JSON.parse(jsonText) as FitnessPlan;
+  } catch (error) {
+    console.error("Error generating remaining plan:", error);
+    throw new Error("Failed to generate the rest of the plan.");
+  }
+};
 
 const nutritionSchema = {
     type: Type.OBJECT,

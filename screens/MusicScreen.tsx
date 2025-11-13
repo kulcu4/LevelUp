@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../components/ui/Card';
 import { Song } from '../types';
+// FIX: Import MusicNoteIcon to fix 'Cannot find name' error.
+import { PlayIcon, PauseIcon, NextIcon, PrevIcon, MusicNoteIcon } from '../components/ui/Icons';
 
 interface MusicScreenProps {
   playlist: Song[];
@@ -9,20 +11,45 @@ interface MusicScreenProps {
 const MusicScreen: React.FC<MusicScreenProps> = ({ playlist }) => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const currentTrack = playlist[currentTrackIndex];
 
+  useEffect(() => {
+    let interval: number;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            handleNext();
+            return 0;
+          }
+          return prev + 1; // Simulate progress
+        });
+      }, 500);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, currentTrackIndex]);
+
   const handleNext = () => {
     setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % playlist.length);
+    setProgress(0);
   };
 
   const handlePrev = () => {
     setCurrentTrackIndex((prevIndex) => (prevIndex - 1 + playlist.length) % playlist.length);
+    setProgress(0);
   };
   
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
-  }
+  };
+
+  const selectTrack = (index: number) => {
+    setCurrentTrackIndex(index);
+    setProgress(0);
+    setIsPlaying(true);
+  };
 
   return (
     <div className="p-4 sm:p-6 space-y-6 animate-fadeIn">
@@ -33,31 +60,25 @@ const MusicScreen: React.FC<MusicScreenProps> = ({ playlist }) => {
 
       <Card>
         <div className="p-6 flex flex-col items-center space-y-4">
-            <div className="w-32 h-32 bg-base-300 rounded-lg flex items-center justify-center">
-                <svg className="w-16 h-16 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 19.22a2.25 2.25 0 01-1.07-1.916V6.612a2.25 2.25 0 011.07-1.916l7.5-4.615a2.25 2.25 0 012.36 0L19.5 7.384" />
-                </svg>
+            <div className="w-40 h-40 bg-base-300 rounded-lg flex items-center justify-center shadow-lg">
+                <MusicNoteIcon />
             </div>
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-white">{currentTrack.title}</h2>
                 <p className="text-gray-400">{currentTrack.artist}</p>
             </div>
-             <div className="w-full h-2 bg-base-300 rounded-full">
-                <div className="w-1/2 h-full bg-primary rounded-full"></div>
+             <div className="w-full h-2 bg-base-300 rounded-full cursor-pointer">
+                <div className="h-full bg-primary rounded-full" style={{width: `${progress}%`}}></div>
             </div>
             <div className="flex items-center space-x-6">
-                <button onClick={handlePrev} className="text-gray-400 hover:text-white transition-colors duration-300">
-                     <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.012V5.988a1 1 0 00-1.555-.824l-6 4.012a1 1 0 000 1.648l6 4.012zM15.445 14.832A1 1 0 0017 14.012V5.988a1 1 0 00-1.555-.824l-6 4.012a1 1 0 000 1.648l6 4.012z" /></svg>
+                <button onClick={handlePrev} className="text-gray-400 hover:text-white transition-colors duration-300 active:scale-90">
+                     <PrevIcon />
                 </button>
-                 <button onClick={handlePlayPause} className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-lg transform hover:scale-105 transition-transform duration-300">
-                    {isPlaying ? (
-                         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                    ) : (
-                         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.012v3.976a1 1 0 001.555.824l3-1.988a1 1 0 000-1.648l-3-1.988z" /></svg>
-                    )}
+                 <button onClick={handlePlayPause} className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-lg transform hover:scale-105 transition-transform duration-300 active:scale-95">
+                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
                 </button>
-                <button onClick={handleNext} className="text-gray-400 hover:text-white transition-colors duration-300">
-                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.988v8.024a1 1 0 001.555.824l6-4.012a1 1 0 000-1.648l-6-4.012zM11.555 5.168A1 1 0 0010 5.988v8.024a1 1 0 001.555.824l6-4.012a1 1 0 000-1.648l-6-4.012z" /></svg>
+                <button onClick={handleNext} className="text-gray-400 hover:text-white transition-colors duration-300 active:scale-90">
+                    <NextIcon />
                 </button>
             </div>
         </div>
@@ -65,16 +86,25 @@ const MusicScreen: React.FC<MusicScreenProps> = ({ playlist }) => {
       
       <Card>
         <div className="p-4">
-            <h3 className="text-xl font-semibold text-white mb-2">Playlist</h3>
-            <ul className="divide-y divide-base-300">
+            <h3 className="text-xl font-semibold text-white mb-2">Playlist: Pump Up Mix</h3>
+            <ul className="divide-y divide-base-300 max-h-60 overflow-y-auto">
                 {playlist.map((song, index) => (
-                    <li key={index} onClick={() => setCurrentTrackIndex(index)} className={`p-3 flex justify-between items-center cursor-pointer hover:bg-base-300/50 rounded-lg ${index === currentTrackIndex ? 'text-primary' : ''}`}>
-                        <div>
-                            <p className="font-semibold">{song.title}</p>
-                            <p className="text-sm text-gray-400">{song.artist}</p>
+                    <li key={index} onClick={() => selectTrack(index)} className={`p-3 flex justify-between items-center cursor-pointer hover:bg-base-300/50 rounded-lg transition-all duration-200 ${index === currentTrackIndex ? 'bg-primary/20 text-primary' : ''}`}>
+                        <div className="flex items-center space-x-3">
+                           <span className="text-gray-400 w-4">{index + 1}.</span>
+                            <div>
+                                <p className="font-semibold">{song.title}</p>
+                                <p className="text-sm text-gray-400">{song.artist}</p>
+                            </div>
                         </div>
-                         {index === currentTrackIndex && isPlaying && (
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.636 5.636a9 9 0 0112.728 0M18.364 18.364A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                         {index === currentTrackIndex && isPlaying ? (
+                            <div className="flex space-x-1">
+                                <span className="w-1 h-4 bg-primary rounded-full animate-[bounce_0.5s_ease-in-out_infinite]"></span>
+                                <span className="w-1 h-4 bg-primary rounded-full animate-[bounce_0.7s_ease-in-out_infinite]"></span>
+                                <span className="w-1 h-4 bg-primary rounded-full animate-[bounce_0.9s_ease-in-out_infinite]"></span>
+                            </div>
+                        ) : (
+                           <span className="text-sm text-gray-500">{song.duration}</span>
                         )}
                     </li>
                 ))}

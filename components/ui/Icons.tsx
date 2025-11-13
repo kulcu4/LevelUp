@@ -29,7 +29,13 @@ export const UserCircleIcon = () => (
   </svg>
 );
 
-export const FlameIcon = () => <svg {...iconProps} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-3.797A8.333 8.333 0 0112 2.25c1.153 0 2.243.3 3.218.834a8.22 8.22 0 01.144 2.13z" /></svg>;
+export const MusicNoteIcon = () => (
+    <svg {...iconProps} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 19.22a2.25 2.25 0 01-1.07-1.916V6.612a2.25 2.25 0 011.07-1.916l7.5-4.615a2.25 2.25 0 012.36 0L19.5 7.384" />
+    </svg>
+);
+
+export const FlameIcon = ({className = iconProps.className}) => <svg {...iconProps} className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-3.797A8.333 8.333 0 0112 2.25c1.153 0 2.243.3 3.218.834a8.22 8.22 0 01.144 2.13z" /></svg>;
 
 export const StepsIcon = () => (
     <svg {...iconProps} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,4 +105,54 @@ export const BrainIcon = () => (
     <svg {...iconProps} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.455-2.456L12.75 18l1.178-.398a3.375 3.375 0 002.455-2.456L16.5 14.25l.398 1.178a3.375 3.375 0 002.456 2.456L20.25 18l-1.178.398a3.375 3.375 0 00-2.456 2.456z" />
     </svg>
+);
+
+// --- Music & Integration Icons ---
+
+export const SpotifyIcon = () => (
+    <svg className="w-8 h-8 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.19 14.12c-.22.36-.68.49-1.04.27-2.9-1.78-6.52-2.19-10.87-1.19-.42.09-.73-.23-.82-.64-.09-.42.23-.73.64-.82C9.5 3.81 13.48 4.28 16.7 6.2c.36.22.49.68.27 1.04v-.12zm1.2-2.35c-.27.45-.83.6-1.28.33-3.24-1.98-8.15-2.58-11.89-1.4-.52.16-.9-.19-1.06-.71s.19-.9.71-1.06c4.26-1.32 9.75-.66 13.44 1.55.45.27.6.83.33 1.28v-.03zm.21-2.5c-.33.53-.98.7-1.51.36-3.64-2.22-9.5-2.43-13.22-1.33-.61.18-1.11-.22-1.29-.82-.18-.61.22-1.11.82-1.29 4.22-1.22 10.68-.97 14.8 1.52.53.33.7.98.36 1.51v-.02z" />
+    </svg>
+);
+
+export const YoutubeMusicIcon = () => (
+    <svg className="w-8 h-8 text-[#FF0000]" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 13.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 6.5 12 6.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-7c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z" />
+        <path d="M10 12.24v-1.48l2 1.48-2-1.48z" />
+    </svg>
+);
+
+
+export const PlayIcon = ({className="w-8 h-8"}) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.012v3.976a1 1 0 001.555.824l3-1.988a1 1 0 000-1.648l-3-1.988z" /></svg>
+);
+
+export const PauseIcon = ({className="w-8 h-8"}) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+);
+
+export const NextIcon = ({className="w-8 h-8"}) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.988v8.024a1 1 0 001.555.824l6-4.012a1 1 0 000-1.648l-6-4.012zM11.555 5.168A1 1 0 0010 5.988v8.024a1 1 0 001.555.824l6-4.012a1 1 0 000-1.648l-6-4.012z" /></svg>
+);
+
+export const PrevIcon = ({className="w-8 h-8"}) => (
+     <svg className={className} fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.012V5.988a1 1 0 00-1.555-.824l-6 4.012a1 1 0 000 1.648l6 4.012zM15.445 14.832A1 1 0 0017 14.012V5.988a1 1 0 00-1.555-.824l-6 4.012a1 1 0 000 1.648l6 4.012z" /></svg>
+);
+
+export const CheckCircleIcon = ({className = "w-6 h-6"}) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+export const AppleHealthIcon = () => (
+    <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+);
+
+export const FitbitIcon = () => (
+  <svg className="w-8 h-8 text-teal-400" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M18.8,10.46c-1.38,1-3.23.36-3.46-1.36-.2-1.51.89-2.93,2.27-3.94,1.38-1,3.23-.36,3.46,1.36.2,1.51-.89,2.94-2.27,3.94ZM11.33,9.1c-1.38,1-3.23.36-3.46-1.36S8.76,4.8,10.14,3.8c1.38-1,3.23-.36,3.46,1.36.2,1.51-.89,2.94-2.27,3.94Zm-1.8,5.42c-1.38,1-3.23.36-3.46-1.36-.2-1.51.89-2.93,2.27-3.94,1.38-1,3.23-.36,3.46,1.36.2,1.51-.89,2.94-2.27,3.94Zm9.39,4.24c-1.38,1-3.23.36-3.46-1.36-.2-1.51.89-2.93,2.27-3.94,1.38-1,3.23-.36,3.46,1.36.2,1.51-.89,2.94-2.27,3.94Zm-9.32,1.36c-1.38,1-3.23.36-3.46-1.36-.2-1.51.89-2.93,2.27-3.94,1.38-1,3.23-.36,3.46,1.36.2,1.51-.89,2.94-2.27,3.94Z"/>
+  </svg>
 );

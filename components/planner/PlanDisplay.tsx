@@ -1,26 +1,40 @@
 import React, { useState } from 'react';
 import { FitnessPlan, DailyWorkout, DailyMealPlan } from '../../types';
 import Card from '../ui/Card';
+import Spinner from '../ui/Spinner';
 
-const PlanDisplay: React.FC<{ plan: FitnessPlan }> = ({ plan }) => {
+interface PlanDisplayProps {
+    plan: FitnessPlan;
+    isGeneratingFullPlan: boolean;
+}
+
+const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan }) => {
     const [activeTab, setActiveTab] = useState<'workout' | 'meal'>('workout');
     const [activeDay, setActiveDay] = useState<number>(0);
 
     const DaySelector: React.FC<{planDays: string[], onSelect: (index: number) => void, currentDay: number}> = ({planDays, onSelect, currentDay}) => (
-        <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
-            {planDays.map((day, index) => (
-                <button
-                    key={index}
-                    onClick={() => onSelect(index)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-all duration-300 active:scale-95 hover:-translate-y-1 ${
-                        currentDay === index
-                            ? 'bg-primary text-white shadow-md'
-                            : 'bg-base-300 text-gray-300 hover:bg-base-300/70'
-                    }`}
-                >
-                    {day}
-                </button>
-            ))}
+        <div className="flex items-center space-x-2">
+            <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4 flex-grow">
+                {planDays.map((day, index) => (
+                    <button
+                        key={index}
+                        onClick={() => onSelect(index)}
+                        className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-all duration-300 active:scale-95 hover:-translate-y-1 ${
+                            currentDay === index
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-base-300 text-gray-300 hover:bg-base-300/70'
+                        }`}
+                    >
+                        {day}
+                    </button>
+                ))}
+            </div>
+            {isGeneratingFullPlan && (
+                <div className="flex items-center space-x-2 text-xs text-gray-400 pr-4">
+                    <Spinner />
+                    <span>Loading week...</span>
+                </div>
+            )}
         </div>
     );
 

@@ -1,13 +1,17 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { UserProfile, FitnessPlan } from '../types';
-import { generateFitnessPlan } from '../services/geminiService';
+import { generateInitialPlan, generateRemainingPlan } from '../services/geminiService';
 import PlanDisplay from '../components/planner/PlanDisplay';
 import Spinner from '../components/ui/Spinner';
 import Card from '../components/ui/Card';
 import PlannerForm from '../components/planner/PlannerForm';
 
-const PlannerScreen: React.FC = () => {
+interface PlannerScreenProps {
+  onPlanGenerated: (plan: FitnessPlan, profile: UserProfile, maintenance: number) => void;
+}
+
+const PlannerScreen: React.FC<PlannerScreenProps> = ({ onPlanGenerated }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>({
     age: 30,
     weight: 70,
@@ -21,7 +25,9 @@ const PlannerScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [plan, setPlan] = useState<FitnessPlan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingFullPlan, setIsGeneratingFullPlan] = useState(false);
 
   const handleProfileChange = useCallback((field: keyof UserProfile, value: string | number) => {
     setUserProfile(prev => ({ ...prev, [field]: value }));
@@ -47,6 +53,7 @@ const PlannerScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     setIsLoading(true);
+    setLoadingMessage("Generating your first day...");
     setError(null);
     setPlan(null);
     try {
@@ -54,13 +61,30 @@ const PlannerScreen: React.FC = () => {
         throw new Error("API_KEY environment variable not set.");
       }
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const generatedPlan = await generateFitnessPlan(ai, userProfile, maintenanceCalories);
-      setPlan(generatedPlan);
+      
+      // Stage 1: Generate initial plan (Day 1)
+      const initialPlan = await generateInitialPlan(ai, userProfile, maintenanceCalories);
+      setPlan(initialPlan);
+      onPlanGenerated(initialPlan, userProfile, maintenanceCalories);
+      setIsLoading(false);
+
+      // Stage 2: Generate the rest of the plan in the background
+      setIsGeneratingFullPlan(true);
+      const remainingPlan = await generateRemainingPlan(ai, userProfile, maintenanceCalories, initialPlan);
+      
+      const fullPlan: FitnessPlan = {
+          workoutPlan: [...initialPlan.workoutPlan, ...remainingPlan.workoutPlan],
+          mealPlan: [...initialPlan.mealPlan, ...remainingPlan.mealPlan]
+      };
+      setPlan(fullPlan);
+      onPlanGenerated(fullPlan, userProfile, maintenanceCalories);
+
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-    } finally {
       setIsLoading(false);
+    } finally {
+        setIsGeneratingFullPlan(false);
     }
   };
   
@@ -82,7 +106,7 @@ const PlannerScreen: React.FC = () => {
       {isLoading && (
         <div className="flex flex-col items-center justify-center h-64">
           <Spinner />
-          <p className="mt-4 text-lg">Generating your personalized plan...</p>
+          <p className="mt-4 text-lg">{loadingMessage}</p>
           <p className="text-gray-400">This might take a moment.</p>
         </div>
       )}
@@ -110,7 +134,7 @@ const PlannerScreen: React.FC = () => {
 
       {plan && (
         <>
-            <PlanDisplay plan={plan} />
+            <PlanDisplay plan={plan} isGeneratingFullPlan={isGeneratingFullPlan}/>
              <div className="text-center mt-6">
                  <button 
                      onClick={resetPlan} 
