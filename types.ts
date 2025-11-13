@@ -83,3 +83,10 @@ export interface DailyLog {
     isTrackingSleep: boolean;
     sleepStartTime: number | null;
 }
+
+export interface IntegrationState {
+    spotify: boolean;
+    youtube: boolean;
+    appleHealth: boolean;
+    fitbit: boolean;
+}

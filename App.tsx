@@ -7,7 +7,7 @@ import InsightsScreen from './screens/InsightsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LogMealScreen from './screens/LogMealScreen';
 import MusicScreen from './screens/MusicScreen';
-import { Tab, DailyLog, LoggedMeal, UserProfile, FitnessPlan, Song } from './types';
+import { Tab, DailyLog, LoggedMeal, UserProfile, FitnessPlan, Song, IntegrationState } from './types';
 
 // --- Helper Functions for Calorie Estimation ---
 
@@ -54,13 +54,29 @@ const estimateSleepCalories = (sleepDurationHours: number, weightKg: number): nu
 };
 
 // --- Sample Data ---
-const samplePlaylist: Song[] = [
+const defaultPlaylist: Song[] = [
     { title: 'Push It', artist: 'Salt-N-Pepa', duration: '4:28' },
     { title: 'Eye of the Tiger', artist: 'Survivor', duration: '4:04' },
     { title: 'Lose Yourself', artist: 'Eminem', duration: '5:20' },
     { title: 'Stronger', artist: 'Kanye West', duration: '5:12' },
     { title: 'Remember the Name', artist: 'Fort Minor', duration: '3:50' },
     { title: 'Till I Collapse', artist: 'Eminem ft. Nate Dogg', duration: '4:57' },
+];
+
+const youtubePlaylist: Song[] = [
+    { title: 'Blinding Lights', artist: 'The Weeknd', duration: '3:20' },
+    { title: 'Levitating', artist: 'Dua Lipa', duration: '3:23' },
+    { title: 'bad guy', artist: 'Billie Eilish', duration: '3:14' },
+    { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: '4:30' },
+    { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake', duration: '3:56' },
+];
+
+const spotifyPlaylist: Song[] = [
+    { title: 'Dance Monkey', artist: 'Tones and I', duration: '3:29' },
+    { title: 'Shape of You', artist: 'Ed Sheeran', duration: '3:53' },
+    { title: 'Rockstar', artist: 'Post Malone ft. 21 Savage', duration: '3:38' },
+    { title: 'Closer', artist: 'The Chainsmokers ft. Halsey', duration: '4:04' },
+    { title: 'One Dance', artist: 'Drake ft. Wizkid & Kyla', duration: '2:53' },
 ];
 
 
@@ -84,6 +100,30 @@ const App: React.FC = () => {
     isTrackingSleep: false,
     sleepStartTime: null,
   });
+  
+  const [integrations, setIntegrations] = useState<IntegrationState>({
+    spotify: false,
+    youtube: false,
+    appleHealth: false,
+    fitbit: false,
+  });
+
+  const handleIntegrationToggle = (name: keyof IntegrationState) => {
+    // If not connected, open the link to simulate the connection flow.
+    if (!integrations[name]) {
+      const urls = {
+        spotify: 'https://www.spotify.com/account/apps/',
+        youtube: 'https://music.youtube.com/',
+        appleHealth: 'https://support.apple.com/guide/iphone/share-your-health-data-iph5ede0755f/ios',
+        fitbit: 'https://www.fitbit.com/settings/applications'
+      };
+      window.open(urls[name], '_blank', 'noopener,noreferrer');
+    }
+    
+    // Toggle the connection state in the UI
+    setIntegrations(prev => ({ ...prev, [name]: !prev[name] }));
+  };
+
 
   const handlePlanGenerated = (plan: FitnessPlan, profile: UserProfile, maintenance: number) => {
     // If it's a full plan, just set it. If it's a partial plan, merge it with any existing full plan data.
@@ -240,11 +280,28 @@ const App: React.FC = () => {
                   userImage={userImage}
                   setUserName={setUserName}
                   setUserImage={setUserImage}
+                  integrations={integrations}
+                  onIntegrationToggle={handleIntegrationToggle}
                 />;
       case 'log_meal':
         return <LogMealScreen onLogMeal={handleLogMeal} />;
       case 'music':
-        return <MusicScreen playlist={samplePlaylist} />;
+        {
+          let activePlaylist = defaultPlaylist;
+          let activePlaylistTitle = "Level Up Pump Up Mix";
+          let source: 'youtube' | 'spotify' | 'default' = 'default';
+
+          if (integrations.youtube) {
+              activePlaylist = youtubePlaylist;
+              activePlaylistTitle = "Your YouTube Music Mix";
+              source = 'youtube';
+          } else if (integrations.spotify) {
+              activePlaylist = spotifyPlaylist;
+              activePlaylistTitle = "Your Spotify Mix";
+              source = 'spotify';
+          }
+          return <MusicScreen playlist={activePlaylist} playlistTitle={activePlaylistTitle} source={source} />;
+        }
       default:
         return <HomeScreen userName={userName} dailyLog={dailyLog} fitnessPlan={fitnessPlan} setActiveTab={setActiveTab} onToggleWorkoutComplete={handleToggleWorkoutComplete} onToggleStepTracking={handleToggleStepTracking} onResetSteps={handleResetSteps} onToggleSleepTracking={handleToggleSleepTracking} />;
     }

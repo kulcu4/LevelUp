@@ -1,42 +1,21 @@
 import React, { useState, useRef } from 'react';
 import Card from '../components/ui/Card';
 import { CogIcon, BellIcon, ShieldCheckIcon, PencilIcon, CameraIcon, SpotifyIcon, YoutubeMusicIcon, AppleHealthIcon, FitbitIcon, CheckCircleIcon } from '../components/ui/Icons';
+import { IntegrationState } from '../types';
 
 interface ProfileScreenProps {
   userName: string;
   userImage: string;
   setUserName: (name: string) => void;
   setUserImage: (image: string) => void;
+  integrations: IntegrationState;
+  onIntegrationToggle: (name: keyof IntegrationState) => void;
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setUserName, setUserImage }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setUserName, setUserImage, integrations, onIntegrationToggle }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(userName);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const [integrations, setIntegrations] = useState({
-    spotify: false,
-    youtube: false,
-    appleHealth: false,
-    fitbit: false,
-  });
-
-  const handleIntegrationToggle = (name: keyof typeof integrations) => {
-    // If not connected, open the link to simulate the connection flow.
-    if (!integrations[name]) {
-      const urls = {
-        spotify: 'https://www.spotify.com/account/apps/',
-        youtube: 'https://music.youtube.com/',
-        appleHealth: 'https://support.apple.com/guide/iphone/share-your-health-data-iph5ede0755f/ios',
-        fitbit: 'https://www.fitbit.com/settings/applications'
-      };
-      window.open(urls[name], '_blank', 'noopener,noreferrer');
-    }
-    
-    // Toggle the connection state in the UI
-    setIntegrations(prev => ({ ...prev, [name]: !prev[name] }));
-  };
-
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -150,10 +129,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setU
             <div className="grid grid-cols-2 gap-4">
                  {/* This is a trick for tailwind to generate the classes */}
                  <span className="hidden border-spotify border-youtube border-red-500 border-teal-400 hover:border-spotify hover:border-youtube hover:border-red-500 hover:border-teal-400"></span>
-                <IntegrationButton icon={<SpotifyIcon />} label="Spotify" brandColor="spotify" isConnected={integrations.spotify} onConnect={() => handleIntegrationToggle('spotify')} />
-                <IntegrationButton icon={<YoutubeMusicIcon />} label="YouTube Music" brandColor="youtube" isConnected={integrations.youtube} onConnect={() => handleIntegrationToggle('youtube')} />
-                <IntegrationButton icon={<AppleHealthIcon />} label="Apple Health" brandColor="red-500" isConnected={integrations.appleHealth} onConnect={() => handleIntegrationToggle('appleHealth')} />
-                <IntegrationButton icon={<FitbitIcon />} label="Fitbit" brandColor="teal-400" isConnected={integrations.fitbit} onConnect={() => handleIntegrationToggle('fitbit')} />
+                <IntegrationButton icon={<SpotifyIcon />} label="Spotify" brandColor="spotify" isConnected={integrations.spotify} onConnect={() => onIntegrationToggle('spotify')} />
+                <IntegrationButton icon={<YoutubeMusicIcon />} label="YouTube Music" brandColor="youtube" isConnected={integrations.youtube} onConnect={() => onIntegrationToggle('youtube')} />
+                <IntegrationButton icon={<AppleHealthIcon />} label="Apple Health" brandColor="red-500" isConnected={integrations.appleHealth} onConnect={() => onIntegrationToggle('appleHealth')} />
+                <IntegrationButton icon={<FitbitIcon />} label="Fitbit" brandColor="teal-400" isConnected={integrations.fitbit} onConnect={() => onIntegrationToggle('fitbit')} />
             </div>
         </div>
       </Card>
