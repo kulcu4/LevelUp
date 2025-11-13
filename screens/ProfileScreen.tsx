@@ -55,11 +55,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setU
     return (
       <button 
           onClick={onConnect}
-          className={`flex items-center justify-center space-x-3 p-4 bg-base-300/50 rounded-lg transition-all duration-300 group hover:bg-base-300/80 hover:-translate-y-1 active:scale-95 border-2 ${isConnected ? connectedClasses : disconnectedClasses} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-blue-500`}
+          className={`flex flex-col items-center justify-center p-4 min-h-[120px] bg-base-300/50 rounded-lg transition-all duration-300 group hover:bg-base-300/80 hover:-translate-y-1 active:scale-95 border-2 ${isConnected ? connectedClasses : disconnectedClasses} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-blue-500`}
       >
-          {icon}
-          <span className="font-semibold text-gray-200">{isConnected ? 'Disconnect' : 'Connect'} {label}</span>
-          {isConnected && <CheckCircleIcon className="w-6 h-6 text-green-500" />}
+          <div className="flex-grow flex flex-col items-center justify-center space-y-2">
+            {icon}
+            <span className="font-semibold text-gray-200 text-center">{label}</span>
+          </div>
+           {isConnected ? (
+              <div className="flex items-center space-x-1 text-green-500 mt-2">
+                  <CheckCircleIcon className="w-5 h-5" />
+                  <span className="text-sm font-bold">Active</span>
+              </div>
+          ) : (
+                <span className="text-sm text-gray-400 mt-2">Connect</span>
+          )}
       </button>
     );
   };
