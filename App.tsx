@@ -42,6 +42,17 @@ const estimateStepCalories = (steps: number): number => {
     return Math.round(steps * 0.04);
 };
 
+/**
+ * Estimates calories burned during sleep.
+ * @param sleepDurationHours - The duration of sleep in hours.
+ * @param weightKg - The user's weight in kilograms.
+ * @returns Estimated calories burned.
+ */
+const estimateSleepCalories = (sleepDurationHours: number, weightKg: number): number => {
+    // Approximation: 0.95 kcal per kg per hour.
+    return Math.round(sleepDurationHours * weightKg * 0.95);
+};
+
 // --- Sample Data ---
 const samplePlaylist: Song[] = [
     { title: 'Push It', artist: 'Salt-N-Pepa', duration: '4:28' },
@@ -63,12 +74,15 @@ const App: React.FC = () => {
   const [dailyLog, setDailyLog] = useState<DailyLog>({
     calories: 0,
     protein: 0,
-    steps: 8520,
+    steps: 0,
     weight: 70,
-    sleep: '7h 45m',
+    sleep: '0h 0m',
     meals: [],
     caloriesBurned: 0,
     workoutsCompleted: [],
+    isTrackingSteps: false,
+    isTrackingSleep: false,
+    sleepStartTime: null,
   });
 
   const handlePlanGenerated = (plan: FitnessPlan, profile: UserProfile, maintenance: number) => {
@@ -119,7 +133,62 @@ const App: React.FC = () => {
     });
   }, []);
 
-  // Effect to recalculate burned calories whenever steps or completed workouts change
+  // --- Step & Sleep Tracking Logic ---
+
+  const handleToggleStepTracking = useCallback(() => {
+    setDailyLog(prev => ({ ...prev, isTrackingSteps: !prev.isTrackingSteps }));
+  }, []);
+
+  const handleResetSteps = useCallback(() => {
+    setDailyLog(prev => ({ ...prev, steps: 0 }));
+  }, []);
+  
+  const handleToggleSleepTracking = useCallback(() => {
+    setDailyLog(prev => {
+        const isStarting = !prev.isTrackingSleep;
+        if (isStarting) {
+            // Starting sleep tracking
+            return {
+                ...prev,
+                isTrackingSleep: true,
+                sleepStartTime: Date.now(),
+            };
+        } else {
+            // Stopping sleep tracking
+            const endTime = Date.now();
+            const startTime = prev.sleepStartTime ?? endTime;
+            const durationMs = endTime - startTime;
+            const durationHours = durationMs / (1000 * 60 * 60);
+            const hours = Math.floor(durationHours);
+            const minutes = Math.round((durationHours - hours) * 60);
+            const sleepString = `${hours}h ${minutes}m`;
+
+            return {
+                ...prev,
+                isTrackingSleep: false,
+                sleepStartTime: null,
+                sleep: sleepString,
+            };
+        }
+    });
+  }, []);
+
+  // Effect to simulate step counting
+  useEffect(() => {
+    let stepInterval: number | undefined;
+    if (dailyLog.isTrackingSteps) {
+        stepInterval = setInterval(() => {
+            setDailyLog(prev => ({
+                ...prev,
+                steps: prev.steps + Math.floor(Math.random() * 3) + 1, // Add 1-3 steps
+            }));
+        }, 2000);
+    }
+    return () => clearInterval(stepInterval);
+  }, [dailyLog.isTrackingSteps]);
+
+
+  // Effect to recalculate burned calories whenever dependencies change
   useEffect(() => {
     const stepCalories = estimateStepCalories(dailyLog.steps);
     const weight = userProfile?.weight ?? dailyLog.weight;
@@ -129,13 +198,23 @@ const App: React.FC = () => {
         return total + estimateWorkoutCalories(focus, 60, weight);
     }, 0);
 
-    const totalBurned = stepCalories + workoutCalories;
+    let sleepCalories = 0;
+    if (!dailyLog.isTrackingSleep) {
+      const timeParts = dailyLog.sleep.match(/(\d+)h\s*(\d+)m/);
+      if (timeParts) {
+        const hours = parseInt(timeParts[1], 10);
+        const minutes = parseInt(timeParts[2], 10);
+        const totalHours = hours + minutes / 60;
+        sleepCalories = estimateSleepCalories(totalHours, weight);
+      }
+    }
 
-    // Only update state if the calculated value is different, to prevent render loops
+    const totalBurned = stepCalories + workoutCalories + sleepCalories;
+
     if (totalBurned !== dailyLog.caloriesBurned) {
         setDailyLog(prevLog => ({ ...prevLog, caloriesBurned: totalBurned }));
     }
-  }, [dailyLog.steps, dailyLog.workoutsCompleted, userProfile?.weight, dailyLog.weight]);
+  }, [dailyLog.steps, dailyLog.workoutsCompleted, dailyLog.sleep, dailyLog.isTrackingSleep, userProfile?.weight, dailyLog.weight]);
 
 
   const renderScreen = () => {
@@ -147,6 +226,9 @@ const App: React.FC = () => {
                   fitnessPlan={fitnessPlan}
                   setActiveTab={setActiveTab}
                   onToggleWorkoutComplete={handleToggleWorkoutComplete}
+                  onToggleStepTracking={handleToggleStepTracking}
+                  onResetSteps={handleResetSteps}
+                  onToggleSleepTracking={handleToggleSleepTracking}
                />;
       case 'planner':
         return <PlannerScreen onPlanGenerated={handlePlanGenerated} />;
@@ -164,7 +246,7 @@ const App: React.FC = () => {
       case 'music':
         return <MusicScreen playlist={samplePlaylist} />;
       default:
-        return <HomeScreen userName={userName} dailyLog={dailyLog} fitnessPlan={fitnessPlan} setActiveTab={setActiveTab} onToggleWorkoutComplete={handleToggleWorkoutComplete}/>;
+        return <HomeScreen userName={userName} dailyLog={dailyLog} fitnessPlan={fitnessPlan} setActiveTab={setActiveTab} onToggleWorkoutComplete={handleToggleWorkoutComplete} onToggleStepTracking={handleToggleStepTracking} onResetSteps={handleResetSteps} onToggleSleepTracking={handleToggleSleepTracking} />;
     }
   };
 

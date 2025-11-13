@@ -79,4 +79,7 @@ export interface DailyLog {
     maintenanceCalories?: number;
     caloriesBurned: number;
     workoutsCompleted: string[];
+    isTrackingSteps: boolean;
+    isTrackingSleep: boolean;
+    sleepStartTime: number | null;
 }
