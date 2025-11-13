@@ -16,8 +16,17 @@ const initialPlanSchema = {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
-              properties: { name: { type: Type.STRING }, sets: { type: Type.STRING }, reps: { type: Type.STRING }, rest: { type: Type.STRING }, tips: { type: Type.STRING } },
-              required: ["name", "sets", "reps", "rest", "tips"]
+              properties: { 
+                name: { type: Type.STRING }, 
+                sets: { type: Type.STRING }, 
+                reps: { type: Type.STRING }, 
+                rest: { type: Type.STRING }, 
+                tips: { type: Type.STRING },
+                description: { type: Type.STRING, description: "A brief description of the exercise movement." },
+                formTips: { type: Type.STRING, description: "Key pointers for maintaining proper form." },
+                commonMistakes: { type: Type.STRING, description: "Common mistakes to avoid during the exercise." }
+              },
+              required: ["name", "sets", "reps", "rest", "tips", "description", "formTips", "commonMistakes"]
             }
           }
         },
@@ -37,9 +46,13 @@ const initialPlanSchema = {
               type: Type.OBJECT,
               properties: {
                 name: { type: Type.STRING }, description: { type: Type.STRING }, calories: { type: Type.STRING },
-                macros: { type: Type.OBJECT, properties: { protein: { type: Type.STRING }, carbs: { type: Type.STRING }, fat: { type: Type.STRING } }, required: ["protein", "carbs", "fat"] }
+                macros: { type: Type.OBJECT, properties: { protein: { type: Type.STRING }, carbs: { type: Type.STRING }, fat: { type: Type.STRING } }, required: ["protein", "carbs", "fat"] },
+                tasteProfile: { type: Type.STRING },
+                texture: { type: Type.STRING },
+                flavorVariations: { type: Type.STRING },
+                prepInstructions: { type: Type.STRING }
               },
-              required: ["name", "description", "calories", "macros"]
+              required: ["name", "description", "calories", "macros", "tasteProfile", "texture", "flavorVariations", "prepInstructions"]
             }
           },
           dailyTotals: {
@@ -89,8 +102,8 @@ const commonPromptDetails = (profile: UserProfile, maintenanceCalories: number) 
     - If goal is 'maintain_weight' or 'gain_strength', stick close to the maintenance calories.
     - The entire meal plan MUST adhere to their dietary preference (${profile.dietaryPreference}).
 
-    For each exercise, provide: name, sets, reps, rest time, and a helpful tip.
-    For each meal, provide: name, description, calories, and macros (protein, carbs, fat). Also include daily totals.
+    For each exercise, provide: name, sets, reps, rest time, a helpful tip, a brief description of the movement, proper form tips, and common mistakes to avoid.
+    For each meal, provide: name, a detailed description, calories, macros (protein, carbs, fat), taste profile, texture, potential flavor variations, and simple preparation instructions. Also include daily totals.
     The tone should be encouraging, motivational, and easy to understand.
 `;
 

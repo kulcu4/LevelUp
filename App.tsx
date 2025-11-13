@@ -295,7 +295,7 @@ const App: React.FC = () => {
                   onIntegrationToggle={handleIntegrationToggle}
                 />;
       case 'log_meal':
-        return <LogMealScreen onLogMeal={handleLogMeal} />;
+        return <LogMealScreen onLogMeal={handleLogMeal} mealHistory={dailyLog.meals} />;
       case 'music':
         {
           let activePlaylist = defaultPlaylist;

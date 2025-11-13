@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Card from '../components/ui/Card';
-import { StepsIcon, MoonIcon, RefreshIcon } from '../components/ui/Icons';
+import { StepsIcon, MoonIcon, RefreshIcon, PlayIcon, PauseIcon } from '../components/ui/Icons';
 import { DailyLog, FitnessPlan, Tab, DailyWorkout } from '../types';
 import CaloriesTracker from '../components/home/CaloriesTracker';
 
@@ -56,26 +56,106 @@ const PlannerCTA: React.FC<{ setActiveTab: (tab: Tab) => void }> = ({ setActiveT
     </Card>
 );
 
+const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
 const TodaysWorkoutCard: React.FC<{
   workout: DailyWorkout;
   isCompleted: boolean;
   onToggleComplete: (focus: string) => void;
-}> = ({ workout, isCompleted, onToggleComplete }) => (
-  <div className="rounded-xl bg-gradient-to-br from-orange-500 to-primary p-6 text-white shadow-lg flex flex-col items-start">
-    <h2 className="text-xl font-bold">Today's Focus</h2>
-    <p className="mt-1 flex-grow">{workout.focus}</p>
-    <button 
-      onClick={() => onToggleComplete(workout.focus)}
-      className={`mt-4 font-bold py-2 px-6 rounded-lg transition-all duration-300 active:scale-95 ${
-        isCompleted 
-        ? 'bg-green-500 text-white' 
-        : 'bg-white text-primary'
-      }`}
-    >
-      {isCompleted ? '✓ Completed!' : 'Mark as Complete'}
-    </button>
-  </div>
-);
+}> = ({ workout, isCompleted, onToggleComplete }) => {
+    const [timerSeconds, setTimerSeconds] = useState(0);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [restSeconds, setRestSeconds] = useState(0);
+    const isResting = restSeconds > 0;
+
+    useEffect(() => {
+        let interval: number | undefined;
+        if (isTimerRunning && !isResting) {
+            interval = window.setInterval(() => {
+                setTimerSeconds(prev => prev + 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isTimerRunning, isResting]);
+
+    useEffect(() => {
+        let interval: number | undefined;
+        if (isResting) {
+            interval = window.setInterval(() => {
+                setRestSeconds(prev => {
+                    if (prev <= 1) {
+                         // Optional: Play a sound
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isResting]);
+
+    const handleStartStop = () => setIsTimerRunning(prev => !prev);
+    const handleReset = () => {
+        setIsTimerRunning(false);
+        setTimerSeconds(0);
+        setRestSeconds(0);
+    };
+    const startRest = (duration: number) => setRestSeconds(duration);
+
+    return (
+      <div className="rounded-xl bg-gradient-to-br from-orange-500 to-primary p-6 text-white shadow-lg flex flex-col">
+        <div className="flex justify-between items-start">
+            <div>
+                <h2 className="text-xl font-bold">Today's Focus</h2>
+                <p className="mt-1 flex-grow">{workout.focus}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-3xl font-mono tracking-wider">{formatTime(timerSeconds)}</p>
+                <p className="text-xs opacity-80">Workout Time</p>
+            </div>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+                 <button onClick={handleStartStop} className="p-2 bg-white/20 rounded-full hover:bg-white/30 active:scale-95">
+                    {isTimerRunning && !isResting ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+                </button>
+                 <button onClick={handleReset} className="p-2 bg-white/20 rounded-full hover:bg-white/30 active:scale-95">
+                    <RefreshIcon className="w-5 h-5" />
+                </button>
+            </div>
+            {isResting ? (
+                 <div className="bg-cyan-400 text-base-100 font-bold py-2 px-4 rounded-lg">
+                    Rest: {formatTime(restSeconds)}
+                </div>
+            ) : (
+                <div className="flex items-center space-x-2 text-sm">
+                    <span className="font-semibold">Rest:</span>
+                    <button onClick={() => startRest(30)} className="py-1 px-3 bg-white/20 rounded-full hover:bg-white/30">30s</button>
+                    <button onClick={() => startRest(60)} className="py-1 px-3 bg-white/20 rounded-full hover:bg-white/30">60s</button>
+                    <button onClick={() => startRest(90)} className="py-1 px-3 bg-white/20 rounded-full hover:bg-white/30">90s</button>
+                </div>
+            )}
+        </div>
+
+        <button 
+          onClick={() => onToggleComplete(workout.focus)}
+          className={`mt-6 font-bold py-3 px-6 rounded-lg w-full transition-all duration-300 active:scale-95 ${
+            isCompleted 
+            ? 'bg-green-500 text-white' 
+            : 'bg-white text-primary'
+          }`}
+        >
+          {isCompleted ? '✓ Completed!' : 'Mark as Complete'}
+        </button>
+      </div>
+    );
+};
+
 
 interface HomeScreenProps {
   userName: string;

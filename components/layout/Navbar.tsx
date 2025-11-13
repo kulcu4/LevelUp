@@ -34,8 +34,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       <div className="flex justify-around items-center h-full max-w-lg mx-auto">
         <NavItem label="Home" icon={<HomeIcon />} isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
         <NavItem label="Planner" icon={<BoltIcon />} isActive={activeTab === 'planner'} onClick={() => setActiveTab('planner')} />
-        <NavItem label="Music" icon={<MusicNoteIcon />} isActive={activeTab === 'music'} onClick={() => setActiveTab('music')} />
         <NavItem label="Insights" icon={<ChartBarIcon />} isActive={activeTab === 'insights'} onClick={() => setActiveTab('insights')} />
+        <NavItem label="Music" icon={<MusicNoteIcon />} isActive={activeTab === 'music'} onClick={() => setActiveTab('music')} />        
         <NavItem label="Me" icon={<UserCircleIcon />} isActive={activeTab === 'me'} onClick={() => setActiveTab('me')} />
       </div>
     </nav>

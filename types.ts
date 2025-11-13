@@ -18,6 +18,9 @@ export interface Exercise {
   reps: string;
   rest: string;
   tips: string;
+  description: string;
+  formTips: string;
+  commonMistakes: string;
 }
 
 export interface DailyWorkout {
@@ -35,6 +38,10 @@ export interface Meal {
     carbs: string;
     fat: string;
   };
+  tasteProfile: string;
+  texture: string;
+  flavorVariations: string;
+  prepInstructions: string;
 }
 
 export interface DailyMealPlan {

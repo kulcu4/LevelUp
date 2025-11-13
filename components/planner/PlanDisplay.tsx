@@ -1,16 +1,58 @@
 import React, { useState } from 'react';
-import { FitnessPlan, DailyWorkout, DailyMealPlan } from '../../types';
+import { FitnessPlan, DailyWorkout, DailyMealPlan, Exercise } from '../../types';
 import Card from '../ui/Card';
 import Spinner from '../ui/Spinner';
+import { DeadliftIcon } from '../ui/Icons';
 
 interface PlanDisplayProps {
     plan: FitnessPlan;
     isGeneratingFullPlan: boolean;
 }
 
+const ExerciseAnimationPlaceholder: React.FC<{ exerciseName: string }> = ({ exerciseName }) => {
+    const lowerCaseName = exerciseName.toLowerCase();
+
+    if (lowerCaseName.includes('deadlift')) {
+        return (
+            <div className="flex justify-center items-center h-24 bg-base-100/50 rounded-lg p-4">
+                <style>{`
+                    @keyframes deadlift-anim {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-15px); }
+                    }
+                    .deadlift-icon-anim { animation: deadlift-anim 2s ease-in-out infinite; }
+                `}</style>
+                <DeadliftIcon className="w-12 h-12 text-primary deadlift-icon-anim" />
+                <p className="ml-4 text-sm text-gray-400">Simulating deadlift motion...</p>
+            </div>
+        );
+    }
+
+    // Generic placeholder for other exercises
+    return (
+        <div className="flex justify-center items-center h-24 bg-base-100/50 rounded-lg p-4">
+            <p className="text-sm text-gray-400">Animation for "{exerciseName}" coming soon.</p>
+        </div>
+    );
+};
+
+
 const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan }) => {
     const [activeTab, setActiveTab] = useState<'workout' | 'meal'>('workout');
     const [activeDay, setActiveDay] = useState<number>(0);
+    const [expandedExercise, setExpandedExercise] = useState<number | null>(null);
+    const [showAnimation, setShowAnimation] = useState(false);
+
+    const toggleExercise = (index: number) => {
+        if (expandedExercise === index) {
+            setExpandedExercise(null);
+            setShowAnimation(false);
+        } else {
+            setExpandedExercise(index);
+            setShowAnimation(false);
+        }
+    };
+
 
     const DaySelector: React.FC<{planDays: string[], onSelect: (index: number) => void, currentDay: number}> = ({planDays, onSelect, currentDay}) => (
         <div className="flex items-center space-x-2">
@@ -46,7 +88,7 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan })
             ) : (
                 <ul className="divide-y divide-base-300">
                     {dayPlan.exercises.map((ex, i) => (
-                        <li key={i} className="py-4">
+                        <li key={i} className="py-4 cursor-pointer" onClick={() => toggleExercise(i)}>
                             <h4 className="font-semibold text-lg text-secondary">{ex.name}</h4>
                             <div className="grid grid-cols-3 gap-2 text-sm mt-2">
                                 <p><span className="font-bold">Sets:</span> {ex.sets}</p>
@@ -54,6 +96,26 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan })
                                 <p><span className="font-bold">Rest:</span> {ex.rest}</p>
                             </div>
                             <p className="text-gray-400 mt-2 text-sm italic">Tip: {ex.tips}</p>
+                             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${expandedExercise === i ? 'max-h-[500px] opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                <div className="space-y-3 pt-2">
+                                    <p className="text-sm text-gray-300">{ex.description}</p>
+                                    <div>
+                                        <h5 className="font-bold text-sm text-white">Proper Form:</h5>
+                                        <p className="text-sm text-gray-400">{ex.formTips}</p>
+                                    </div>
+                                     <div>
+                                        <h5 className="font-bold text-sm text-white">Common Mistakes:</h5>
+                                        <p className="text-sm text-gray-400">{ex.commonMistakes}</p>
+                                    </div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setShowAnimation(prev => !prev); }}
+                                        className="text-xs bg-cyan-400/20 text-cyan-100 px-3 py-1 rounded-full hover:bg-cyan-400/40"
+                                    >
+                                        {showAnimation ? 'Hide Animation' : 'Show Animation'}
+                                    </button>
+                                     {showAnimation && <ExerciseAnimationPlaceholder exerciseName={ex.name} />}
+                                </div>
+                            </div>
                         </li>
                     ))}
                 </ul>
@@ -83,6 +145,12 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan })
                            <p>C: {meal.macros.carbs}g</p>
                            <p>F: {meal.macros.fat}g</p>
                         </div>
+                        <div className="mt-3 pt-2 border-t border-base-300/50 space-y-2 text-xs text-gray-400">
+                           <p><strong>Taste:</strong> {meal.tasteProfile}</p>
+                           <p><strong>Texture:</strong> {meal.texture}</p>
+                           <p><strong>Variations:</strong> {meal.flavorVariations}</p>
+                           <p><strong>Prep:</strong> {meal.prepInstructions}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
@@ -100,7 +168,7 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, isGeneratingFullPlan })
             <div className="p-4 sm:p-6">
                 {activeTab === 'workout' && (
                     <div className="space-y-4">
-                       <DaySelector planDays={plan.workoutPlan.map(p => p.day)} onSelect={setActiveDay} currentDay={activeDay} />
+                       <DaySelector planDays={plan.workoutPlan.map(p => p.day)} onSelect={(day) => {setActiveDay(day); setExpandedExercise(null);}} currentDay={activeDay} />
                        <WorkoutDetails dayPlan={plan.workoutPlan[activeDay]} />
                     </div>
                 )}
