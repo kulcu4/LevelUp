@@ -26,7 +26,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setU
     if (!integrations[name]) {
       const urls = {
         spotify: 'https://www.spotify.com/account/apps/',
-        youtube: 'https://myaccount.google.com/connections',
+        youtube: 'https://music.youtube.com/',
         appleHealth: 'https://support.apple.com/guide/iphone/share-your-health-data-iph5ede0755f/ios',
         fitbit: 'https://www.fitbit.com/settings/applications'
       };
