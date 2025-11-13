@@ -22,8 +22,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userName, userImage, setU
   });
 
   const handleIntegrationToggle = (name: keyof typeof integrations) => {
+    // If not connected, open the link to simulate the connection flow.
+    if (!integrations[name]) {
+      const urls = {
+        spotify: 'https://www.spotify.com/account/apps/',
+        youtube: 'https://myaccount.google.com/connections',
+        appleHealth: 'https://support.apple.com/guide/iphone/share-your-health-data-iph5ede0755f/ios',
+        fitbit: 'https://www.fitbit.com/settings/applications'
+      };
+      window.open(urls[name], '_blank', 'noopener,noreferrer');
+    }
+    
+    // Toggle the connection state in the UI
     setIntegrations(prev => ({ ...prev, [name]: !prev[name] }));
   };
+
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
