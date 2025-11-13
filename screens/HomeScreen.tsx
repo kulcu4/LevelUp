@@ -20,37 +20,22 @@ interface TrackableStatCardProps {
   value: string;
   label: string;
   colorClass: string;
-  isTracking: boolean;
-  onToggle: () => void;
-  onReset?: () => void;
-  sleepStartTime?: number | null;
+  topRightControl?: React.ReactNode;
+  bottomRightActions?: React.ReactNode;
 }
 
-const TrackableStatCard: React.FC<TrackableStatCardProps> = ({ icon, value, label, colorClass, isTracking, onToggle, onReset, sleepStartTime }) => (
+const TrackableStatCard: React.FC<TrackableStatCardProps> = ({ icon, value, label, colorClass, topRightControl, bottomRightActions }) => (
   <Card className="flex flex-col p-4 space-y-2">
     <div className="flex justify-between items-center">
         <div className={`text-lg ${colorClass}`}>{icon}</div>
-        <ToggleSwitch isChecked={isTracking} onChange={onToggle} />
+        {topRightControl}
     </div>
     <div className="flex-grow flex flex-col items-start">
         <div className="text-3xl font-bold text-white">{value}</div>
         <div className="text-sm text-gray-400">{label}</div>
     </div>
-    <div className="h-6 flex items-center justify-end">
-        {onReset && (
-            <button 
-              onClick={onReset}
-              className="flex items-center space-x-1 text-xs text-gray-500 hover:text-primary transition-colors duration-300"
-            >
-              <RefreshIcon className="w-4 h-4" />
-              <span>Reset</span>
-            </button>
-        )}
-        {label === "Sleep" && isTracking && sleepStartTime && (
-            <p className="text-xs text-gray-500">
-                Start: {new Date(sleepStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-        )}
+    <div className="h-6 flex items-center justify-end space-x-2">
+        {bottomRightActions}
     </div>
   </Card>
 );
@@ -98,12 +83,13 @@ interface HomeScreenProps {
   fitnessPlan: FitnessPlan | null;
   setActiveTab: (tab: Tab) => void;
   onToggleWorkoutComplete: (workoutFocus: string) => void;
-  onToggleStepTracking: () => void;
+  onSyncSteps: () => void;
   onResetSteps: () => void;
+  onToggleStepTracking: () => void;
   onToggleSleepTracking: () => void;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ userName, dailyLog, fitnessPlan, setActiveTab, onToggleWorkoutComplete, onToggleStepTracking, onResetSteps, onToggleSleepTracking }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ userName, dailyLog, fitnessPlan, setActiveTab, onToggleWorkoutComplete, onSyncSteps, onResetSteps, onToggleStepTracking, onToggleSleepTracking }) => {
     
     // Determine today's workout
     const getTodaysWorkout = () => {
@@ -144,20 +130,41 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ userName, dailyLog, fitnessPlan
           <TrackableStatCard 
             icon={<StepsIcon />} 
             value={dailyLog.steps.toLocaleString()} 
-            label="Steps" 
+            label={dailyLog.isTrackingSteps ? "Steps (Tracking...)" : "Steps"}
             colorClass="text-yellow-500"
-            isTracking={dailyLog.isTrackingSteps}
-            onToggle={onToggleStepTracking}
-            onReset={onResetSteps}
+            topRightControl={<ToggleSwitch isChecked={dailyLog.isTrackingSteps} onChange={onToggleStepTracking} />}
+            bottomRightActions={
+              <>
+                <button 
+                  onClick={onSyncSteps}
+                  className="flex items-center space-x-1 text-xs text-gray-500 hover:text-primary transition-colors duration-300"
+                  aria-label="Sync steps"
+                >
+                  <span>Sync</span>
+                </button>
+                <button 
+                  onClick={onResetSteps}
+                  className="flex items-center space-x-1 text-xs text-gray-500 hover:text-primary transition-colors duration-300"
+                  aria-label="Reset steps"
+                >
+                  <RefreshIcon className="w-4 h-4" />
+                </button>
+              </>
+            }
           />
           <TrackableStatCard 
             icon={<MoonIcon />} 
             value={dailyLog.isTrackingSleep ? "Tracking..." : dailyLog.sleep}
             label="Sleep" 
             colorClass="text-cyan-400"
-            isTracking={dailyLog.isTrackingSleep}
-            onToggle={onToggleSleepTracking}
-            sleepStartTime={dailyLog.sleepStartTime}
+            topRightControl={<ToggleSwitch isChecked={dailyLog.isTrackingSleep} onChange={onToggleSleepTracking} />}
+            bottomRightActions={
+                 dailyLog.isTrackingSleep && dailyLog.sleepStartTime && (
+                    <p className="text-xs text-gray-500">
+                        Start: {new Date(dailyLog.sleepStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                )
+            }
           />
         </div>
       </section>

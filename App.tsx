@@ -178,6 +178,13 @@ const App: React.FC = () => {
   const handleToggleStepTracking = useCallback(() => {
     setDailyLog(prev => ({ ...prev, isTrackingSteps: !prev.isTrackingSteps }));
   }, []);
+  
+  const handleSyncSteps = useCallback(() => {
+    // Simulate syncing with phone and adding a chunk of steps
+    const newSteps = 500 + Math.floor(Math.random() * 1000);
+    setDailyLog(prev => ({ ...prev, steps: prev.steps + newSteps }));
+  }, []);
+
 
   const handleResetSteps = useCallback(() => {
     setDailyLog(prev => ({ ...prev, steps: 0 }));
@@ -213,20 +220,23 @@ const App: React.FC = () => {
     });
   }, []);
 
-  // Effect to simulate step counting
+  // Effect for live step tracking simulation
   useEffect(() => {
     let stepInterval: number | undefined;
     if (dailyLog.isTrackingSteps) {
-        stepInterval = setInterval(() => {
-            setDailyLog(prev => ({
-                ...prev,
-                steps: prev.steps + Math.floor(Math.random() * 3) + 1, // Add 1-3 steps
-            }));
-        }, 2000);
+      stepInterval = window.setInterval(() => {
+        // Add a small number of steps every few seconds to simulate walking
+        const newSteps = 5 + Math.floor(Math.random() * 10);
+        setDailyLog(prev => ({ ...prev, steps: prev.steps + newSteps }));
+      }, 5000); // every 5 seconds
     }
-    return () => clearInterval(stepInterval);
-  }, [dailyLog.isTrackingSteps]);
 
+    return () => {
+      if (stepInterval) {
+        clearInterval(stepInterval);
+      }
+    };
+  }, [dailyLog.isTrackingSteps]);
 
   // Effect to recalculate burned calories whenever dependencies change
   useEffect(() => {
@@ -266,8 +276,9 @@ const App: React.FC = () => {
                   fitnessPlan={fitnessPlan}
                   setActiveTab={setActiveTab}
                   onToggleWorkoutComplete={handleToggleWorkoutComplete}
-                  onToggleStepTracking={handleToggleStepTracking}
+                  onSyncSteps={handleSyncSteps}
                   onResetSteps={handleResetSteps}
+                  onToggleStepTracking={handleToggleStepTracking}
                   onToggleSleepTracking={handleToggleSleepTracking}
                />;
       case 'planner':
@@ -303,7 +314,7 @@ const App: React.FC = () => {
           return <MusicScreen playlist={activePlaylist} playlistTitle={activePlaylistTitle} source={source} />;
         }
       default:
-        return <HomeScreen userName={userName} dailyLog={dailyLog} fitnessPlan={fitnessPlan} setActiveTab={setActiveTab} onToggleWorkoutComplete={handleToggleWorkoutComplete} onToggleStepTracking={handleToggleStepTracking} onResetSteps={handleResetSteps} onToggleSleepTracking={handleToggleSleepTracking} />;
+        return <HomeScreen userName={userName} dailyLog={dailyLog} fitnessPlan={fitnessPlan} setActiveTab={setActiveTab} onToggleWorkoutComplete={handleToggleWorkoutComplete} onSyncSteps={handleSyncSteps} onResetSteps={handleResetSteps} onToggleStepTracking={handleToggleStepTracking} onToggleSleepTracking={handleToggleSleepTracking} />;
     }
   };
 
