@@ -15,9 +15,34 @@ const ToggleSwitch: React.FC<{ isChecked: boolean; onChange: () => void; }> = ({
     </button>
 );
 
+// New component for the sleep timer
+const SleepTimer: React.FC<{ startTime: number }> = ({ startTime }) => {
+    const [elapsedTime, setElapsedTime] = useState(Date.now() - startTime);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setElapsedTime(Date.now() - startTime);
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [startTime]);
+
+    const formatElapsedTime = (ms: number) => {
+        if (ms < 0) ms = 0;
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    return <div className="font-mono tracking-wider">{formatElapsedTime(elapsedTime)}</div>;
+};
+
+
 interface TrackableStatCardProps {
   icon: React.ReactNode;
-  value: string;
+  value: React.ReactNode;
   label: string;
   colorClass: string;
   topRightControl?: React.ReactNode;
@@ -234,14 +259,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ userName, dailyLog, fitnessPlan
           />
           <TrackableStatCard 
             icon={<MoonIcon />} 
-            value={dailyLog.isTrackingSleep ? "Tracking..." : dailyLog.sleep}
+            value={dailyLog.isTrackingSleep && dailyLog.sleepStartTime 
+                ? <SleepTimer startTime={dailyLog.sleepStartTime} /> 
+                : dailyLog.sleep
+            }
             label="Sleep" 
             colorClass="text-cyan-400"
             topRightControl={<ToggleSwitch isChecked={dailyLog.isTrackingSleep} onChange={onToggleSleepTracking} />}
             bottomRightActions={
                  dailyLog.isTrackingSleep && dailyLog.sleepStartTime && (
                     <p className="text-xs text-gray-500">
-                        Start: {new Date(dailyLog.sleepStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        Started at: {new Date(dailyLog.sleepStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                 )
             }

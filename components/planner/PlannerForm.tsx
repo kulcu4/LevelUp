@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { UserProfile } from '../../types';
 import Card from '../ui/Card';
+import { FormProfile } from '../../screens/PlannerScreen';
 
 interface PlannerFormProps {
-  profile: UserProfile;
-  onProfileChange: (field: keyof UserProfile, value: string | number) => void;
+  profile: FormProfile;
+  onProfileChange: (field: keyof FormProfile, value: string | number) => void;
   onSubmit: () => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
@@ -62,11 +63,50 @@ const ProgressBar: React.FC<{step: number}> = ({ step }) => {
 
 const PlannerForm: React.FC<PlannerFormProps> = ({ profile, onProfileChange, onSubmit, currentStep, setCurrentStep, maintenanceCalories }) => {
     const { weight, height, age, gender, activityLevel, goal, dietaryPreference } = profile;
+    const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
+    const [weightInput, setWeightInput] = useState('');
+
+    useEffect(() => {
+        const kgWeight = Number(weight);
+        if (kgWeight > 0) {
+            if (weightUnit === 'lbs') {
+                setWeightInput(String(parseFloat((kgWeight * 2.20462).toFixed(1))));
+            } else {
+                setWeightInput(String(kgWeight));
+            }
+        } else {
+            setWeightInput('');
+        }
+    }, [weight, weightUnit]);
+    
+    const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+
+        if (value !== '' && !/^\d*\.?\d*$/.test(value)) {
+            return;
+        }
+
+        setWeightInput(value);
+
+        const numValue = parseFloat(value);
+        if (value === '' || isNaN(numValue)) {
+            onProfileChange('weight', '');
+            return;
+        }
+
+        if (weightUnit === 'lbs') {
+            onProfileChange('weight', numValue / 2.20462);
+        } else {
+            onProfileChange('weight', numValue);
+        }
+    };
     
     const bmi = useMemo(() => {
-        if (weight > 0 && height > 0) {
-            const heightInMeters = height / 100;
-            return (weight / (heightInMeters * heightInMeters)).toFixed(1);
+        const w = parseFloat(String(weight));
+        const h = parseFloat(String(height));
+        if (w > 0 && h > 0) {
+            const heightInMeters = h / 100;
+            return (w / (heightInMeters * heightInMeters)).toFixed(1);
         }
         return '0.0';
     }, [weight, height]);
@@ -79,8 +119,8 @@ const PlannerForm: React.FC<PlannerFormProps> = ({ profile, onProfileChange, onS
         return { text: "Obese", color: "text-red-400" };
     }, [bmi]);
     
-    const isStep1Valid = weight > 0 && height > 0;
-    const isStep2Valid = age > 0;
+    const isStep1Valid = Number(weight) > 0 && Number(height) > 0;
+    const isStep2Valid = Number(age) > 0;
 
   return (
     <Card className="p-6">
@@ -89,8 +129,29 @@ const PlannerForm: React.FC<PlannerFormProps> = ({ profile, onProfileChange, onS
         {currentStep === 1 && (
             <div className="space-y-4 animate-fadeIn">
                 <h2 className="text-xl font-bold text-center text-white mb-4">Step 1: Calculate Your BMI</h2>
-                <InputField name="weight" label="Weight (kg)" type="number" value={weight} onChange={(e) => onProfileChange('weight', parseInt(e.target.value, 10) || 0)} />
-                <InputField name="height" label="Height (cm)" type="number" value={height} onChange={(e) => onProfileChange('height', parseInt(e.target.value, 10) || 0)} />
+                
+                <div>
+                    <label htmlFor="weight" className="block text-sm font-medium text-gray-300 mb-1">Weight</label>
+                    <div className="flex items-center space-x-2">
+                        <input 
+                            id="weight"
+                            name="weight"
+                            type="text"
+                            inputMode="decimal"
+                            placeholder={weightUnit === 'kg' ? "e.g., 70" : "e.g., 154"}
+                            value={weightInput} 
+                            onChange={handleWeightChange}
+                            className="w-full bg-base-300/70 border border-base-300 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-primary focus:border-primary transition"
+                        />
+                        <div className="flex rounded-lg bg-base-300 p-1">
+                            <button type="button" onClick={() => setWeightUnit('kg')} className={`px-3 py-1 text-sm rounded-md transition-colors ${weightUnit === 'kg' ? 'bg-primary text-white' : 'text-gray-400 hover:bg-base-200'}`}>kg</button>
+                            <button type="button" onClick={() => setWeightUnit('lbs')} className={`px-3 py-1 text-sm rounded-md transition-colors ${weightUnit === 'lbs' ? 'bg-primary text-white' : 'text-gray-400 hover:bg-base-200'}`}>lbs</button>
+                        </div>
+                    </div>
+                </div>
+
+                <InputField name="height" label="Height (cm)" type="number" value={height} onChange={(e) => onProfileChange('height', e.target.value)} />
+                
                 {isStep1Valid && (
                     <div className="text-center p-4 bg-base-300/50 rounded-lg mt-4">
                         <p className="text-gray-300">Your BMI is</p>
@@ -107,7 +168,7 @@ const PlannerForm: React.FC<PlannerFormProps> = ({ profile, onProfileChange, onS
         {currentStep === 2 && (
             <div className="space-y-4 animate-fadeIn">
                  <h2 className="text-xl font-bold text-center text-white mb-4">Step 2: Personal Details</h2>
-                 <InputField name="age" label="Age" type="number" value={age} onChange={(e) => onProfileChange('age', parseInt(e.target.value, 10) || 0)} />
+                 <InputField name="age" label="Age" type="number" value={age} onChange={(e) => onProfileChange('age', e.target.value)} />
                  <SelectField name="gender" label="Gender" value={gender} onChange={(e) => onProfileChange('gender', e.target.value)}>
                     <option value="male">Male</option>
                     <option value="female">Female</option>

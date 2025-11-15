@@ -11,8 +11,15 @@ interface PlannerScreenProps {
   onPlanGenerated: (plan: FitnessPlan, profile: UserProfile, maintenance: number) => void;
 }
 
+// Define a local type to allow for empty string in form inputs
+export type FormProfile = Omit<UserProfile, 'age' | 'weight' | 'height'> & {
+  age: number | '';
+  weight: number | '';
+  height: number | '';
+};
+
 const PlannerScreen: React.FC<PlannerScreenProps> = ({ onPlanGenerated }) => {
-  const [userProfile, setUserProfile] = useState<UserProfile>({
+  const [userProfile, setUserProfile] = useState<FormProfile>({
     age: 30,
     weight: 70,
     height: 175,
@@ -29,15 +36,21 @@ const PlannerScreen: React.FC<PlannerScreenProps> = ({ onPlanGenerated }) => {
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingFullPlan, setIsGeneratingFullPlan] = useState(false);
 
-  const handleProfileChange = useCallback((field: keyof UserProfile, value: string | number) => {
+  const handleProfileChange = useCallback((field: keyof FormProfile, value: string | number) => {
     setUserProfile(prev => ({ ...prev, [field]: value }));
   }, []);
   
   const maintenanceCalories = useMemo(() => {
+    const w = Number(userProfile.weight) || 0;
+    const h = Number(userProfile.height) || 0;
+    const a = Number(userProfile.age) || 0;
+
+    if (w === 0 || h === 0 || a === 0) return 0;
+      
     // Harris-Benedict Equation for BMR
     const bmr = userProfile.gender === 'male'
-      ? 88.362 + (13.397 * userProfile.weight) + (4.799 * userProfile.height) - (5.677 * userProfile.age)
-      : 447.593 + (9.247 * userProfile.weight) + (3.098 * userProfile.height) - (4.330 * userProfile.age);
+      ? 88.362 + (13.397 * w) + (4.799 * h) - (5.677 * a)
+      : 447.593 + (9.247 * w) + (3.098 * h) - (4.330 * a);
 
     const activityMultipliers = {
       sedentary: 1.2,
@@ -56,6 +69,15 @@ const PlannerScreen: React.FC<PlannerScreenProps> = ({ onPlanGenerated }) => {
     setLoadingMessage("Generating your first day...");
     setError(null);
     setPlan(null);
+
+    // Convert profile data to numbers before sending to API and parent
+    const numericProfile: UserProfile = {
+      ...userProfile,
+      age: Number(userProfile.age) || 0,
+      weight: Number(userProfile.weight) || 0,
+      height: Number(userProfile.height) || 0,
+    };
+
     try {
       if (!process.env.API_KEY) {
         throw new Error("API_KEY environment variable not set.");
@@ -63,21 +85,20 @@ const PlannerScreen: React.FC<PlannerScreenProps> = ({ onPlanGenerated }) => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       // Stage 1: Generate initial plan (Day 1)
-      const initialPlan = await generateInitialPlan(ai, userProfile, maintenanceCalories);
+      const initialPlan = await generateInitialPlan(ai, numericProfile, maintenanceCalories);
       setPlan(initialPlan);
-      onPlanGenerated(initialPlan, userProfile, maintenanceCalories);
-      setIsLoading(false);
-
+      onPlanGenerated(initialPlan, numericProfile, maintenanceCalories);
+      
       // Stage 2: Generate the rest of the plan in the background
       setIsGeneratingFullPlan(true);
-      const remainingPlan = await generateRemainingPlan(ai, userProfile, maintenanceCalories, initialPlan);
+      const remainingPlan = await generateRemainingPlan(ai, numericProfile, maintenanceCalories, initialPlan);
       
       const fullPlan: FitnessPlan = {
           workoutPlan: [...initialPlan.workoutPlan, ...remainingPlan.workoutPlan],
           mealPlan: [...initialPlan.mealPlan, ...remainingPlan.mealPlan]
       };
       setPlan(fullPlan);
-      onPlanGenerated(fullPlan, userProfile, maintenanceCalories);
+      onPlanGenerated(fullPlan, numericProfile, maintenanceCalories);
 
     } catch (err) {
       console.error(err);
